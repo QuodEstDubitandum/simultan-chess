@@ -1,0 +1,50 @@
+name: Deploy to Linode
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Install sshpass
+        run: sudo apt-get install -y sshpass
+
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Copy files to Linode
+        env:
+          SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
+        run: |
+          echo "Copying files to Linode..."
+          sshpass -p "$SSH_PASSWORD" rsync -avz -e "ssh -o StrictHostKeyChecking=no" ./ ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }}:/iUtils/
+          echo "Files copied successfully."
+
+      - name: SSH into Linode and build & deploy
+        env:
+          SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
+        run: |
+          echo "SSH into Linode..."
+          sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} << EOF
+            cd /iUtils
+            echo "Removing old Docker image..."
+            docker image rm simultan-chess || true
+            echo "Building Docker image..."
+            docker build -t simultan-chess .
+            echo "Stopping existing Docker container..."
+            docker stop simultan-chess || true
+            echo "Removing existing Docker container..."
+            docker rm simultan-chess || true
+            echo "Running new Docker container..."
+            docker run -d --name simultan-chess -p 443:443 simultan-chess
+            echo "Deployment done!"
+          EOF
