@@ -24,5 +24,11 @@ FROM debian:latest
 # Copy the build artifact from the build stage
 COPY --from=builder /simultan-chess/target/release/chess-voting /usr/local/bin/simultan-chess
 
+# Copy the .env file
+COPY .env /usr/local/bin/.env
+
+# Set the working directory
+WORKDIR /usr/local/bin
+
 # Set the startup command to run the binary
 CMD ["simultan-chess"]
