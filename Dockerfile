@@ -19,7 +19,7 @@ COPY ./src ./src
 RUN cargo build --release
 
 # Stage 2: Runtime
-FROM debian:buster-slim
+FROM debian:latest
 
 # Copy the build artifact from the build stage
 COPY --from=builder /simultan-chess/target/release/chess-voting /usr/local/bin/simultan-chess
