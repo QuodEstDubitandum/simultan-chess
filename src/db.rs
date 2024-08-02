@@ -7,10 +7,9 @@ use serde::{Deserialize, Serialize};
 
 use crate::utils::error::INTERNAL_SERVER_ERROR;
 
-pub async fn connect_db() -> Connection {
+pub async fn connect_db(env: &str) -> Connection {
     let url = env::var("TURSO_DATABASE_URL").expect("TURSO_DATABASE_URL not set");
     let token = env::var("TURSO_AUTH_TOKEN").expect("TURSO_AUTH_TOKEN not set");
-    let env = env::var("ENV").expect("DEV not set");
 
     let conn: Connection;
     if env == "dev" {
@@ -34,28 +33,36 @@ pub async fn seed_db(db: &Connection) {
     db.execute_batch(
         r#"
     DROP TABLE IF EXISTS Move;
-    DROP TABLE IF EXISTS Game;
-
-    CREATE TABLE IF NOT EXISTS Game(
-    game_id VARCHAR(255) PRIMARY KEY,
-    admin_color VARCHAR(10),
-    result VARCHAR(20),
-    created_at TEXT
-    );
-
-    CREATE TABLE IF NOT EXISTS Move(
-    move_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    game_id VARCHAR(255),
-    turn INTEGER,
-    player VARCHAR(10),
-    move_notation VARCHAR(10),
-    created_at TEXT,
-    FOREIGN KEY(game_id) REFERENCES Game(game_id)
-    );
-    "#,
+    DROP TABLE IF EXISTS Game;"#,
     )
     .await
-    .expect("Cant seed DB");
+    .unwrap();
+
+    db.execute(
+        "CREATE TABLE IF NOT EXISTS Game(
+        game_id TEXT PRIMARY KEY,
+        admin_color TEXT,
+        result TEXT,
+        created_at TEXT)",
+        (),
+    )
+    .await
+    .expect("Cant seed Game Table");
+
+    db.execute(
+        "CREATE TABLE IF NOT EXISTS Move(
+        move_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        game_id VARCHAR(255),
+        turn INTEGER,
+        player VARCHAR(10),
+        move_notation VARCHAR(10),
+        created_at TEXT,
+        FOREIGN KEY(game_id) REFERENCES Game(game_id)
+    );",
+        (),
+    )
+    .await
+    .expect("Cant seed Move Table");
 }
 
 pub struct DB {
@@ -79,8 +86,11 @@ pub struct DBGame {
 
 impl DB {
     pub async fn new() -> DB {
-        let conn = connect_db().await;
-        seed_db(&conn).await;
+        let env = env::var("ENV").expect("DEV not set");
+        let conn = connect_db(&env).await;
+        if env == "dev" {
+            seed_db(&conn).await;
+        }
         DB { conn }
     }
     pub async fn create_game(&self, id: &str, color: &str) -> Result<(), &'static str> {
