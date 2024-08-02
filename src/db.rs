@@ -1,4 +1,4 @@
-use std::time::SystemTime;
+use std::{env, time::SystemTime};
 
 use actix_web::cookie::time::{format_description::well_known::Rfc3339, OffsetDateTime};
 use libsql::{de, params, Builder, Connection};
@@ -8,11 +8,24 @@ use serde::{Deserialize, Serialize};
 use crate::utils::error::INTERNAL_SERVER_ERROR;
 
 pub async fn connect_db() -> Connection {
-    let db = Builder::new_local("local.db")
-        .build()
-        .await
-        .expect("Could not connect local database");
-    let conn = db.connect().unwrap();
+    let url = env::var("TURSO_DATABASE_URL").expect("TURSO_DATABASE_URL not set");
+    let token = env::var("TURSO_AUTH_TOKEN").expect("TURSO_AUTH_TOKEN not set");
+    let env = env::var("ENV").expect("DEV not set");
+
+    let conn: Connection;
+    if env == "dev" {
+        let db = Builder::new_local("local.db")
+            .build()
+            .await
+            .expect("Could not connect to local database");
+        conn = db.connect().unwrap();
+    } else {
+        let db = Builder::new_remote(url, token)
+            .build()
+            .await
+            .expect("Could not connect to prod database");
+        conn = db.connect().unwrap();
+    }
 
     conn
 }

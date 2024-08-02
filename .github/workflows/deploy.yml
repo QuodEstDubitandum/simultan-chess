@@ -35,7 +35,7 @@ jobs:
         run: |
           echo "SSH into Linode..."
           sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} << EOF
-            cd /iUtils
+            cd /Chess
             echo "Removing old Docker image..."
             docker image rm simultan-chess || true
             echo "Building Docker image..."
