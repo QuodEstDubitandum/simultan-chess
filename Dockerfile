@@ -20,9 +20,14 @@ RUN cargo build --release
 
 # Stage 2: Runtime
 FROM debian:latest
+RUN apt-get update && apt-get install -y \
+    sqlite3 \
+    && rm -rf /var/lib/apt/lists/*
 
 # Copy the build artifact from the build stage
 COPY --from=builder /simultan-chess/target/release/chess-voting /usr/local/bin/simultan-chess
+
+RUN sqlite3 /usr/local/bin/local.db
 
 # Copy the .env file
 COPY .env /usr/local/bin/.env
