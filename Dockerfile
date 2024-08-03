@@ -41,5 +41,7 @@ COPY certs/cert.pem /usr/local/bin/certs/cert.pem
 # Set the working directory
 WORKDIR /usr/local/bin
 
+EXPOSE 443
+
 # Set the startup command to run the binary
 CMD ["simultan-chess"]
