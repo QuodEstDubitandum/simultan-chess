@@ -22,6 +22,8 @@ RUN cargo build --release
 FROM debian:latest
 RUN apt-get update && apt-get install -y \
     sqlite3 \
+    openssl \
+    libssl-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy the build artifact from the build stage
