@@ -32,6 +32,10 @@ RUN sqlite3 /usr/local/bin/local.db
 # Copy the .env file
 COPY .env /usr/local/bin/.env
 
+# Copy the certificate files
+COPY certs/key.pem /usr/local/bin/certs/key.pem
+COPY certs/cert.pem /usr/local/bin/certs/cert.pem
+
 # Set the working directory
 WORKDIR /usr/local/bin
 
