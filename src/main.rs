@@ -15,7 +15,7 @@ use chess_voting::{
 };
 use dotenv::dotenv;
 use log::{error, info, warn};
-use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
+// use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
 use uuid::Uuid;
 
 #[actix_web::main]
@@ -26,13 +26,13 @@ async fn main() -> std::io::Result<()> {
     env_logger::Builder::from_default_env().init();
     info!("Server listening on port {}", port);
 
-    let mut builder = SslAcceptor::mozilla_intermediate(SslMethod::tls()).unwrap();
-    builder
-        .set_private_key_file("certs/key.pem", SslFiletype::PEM)
-        .unwrap();
-    builder
-        .set_certificate_chain_file("certs/cert.pem")
-        .unwrap();
+    // let mut builder = SslAcceptor::mozilla_intermediate(SslMethod::tls()).unwrap();
+    // builder
+    //     .set_private_key_file("certs/key.pem", SslFiletype::PEM)
+    //     .unwrap();
+    // builder
+    //     .set_certificate_chain_file("certs/cert.pem")
+    //     .unwrap();
 
     let server = web::Data::new(Server::new().await);
     HttpServer::new(move || {
@@ -50,7 +50,8 @@ async fn main() -> std::io::Result<()> {
             )
             .service(web::scope("ws").service(connect_ws))
     })
-    .bind_openssl(format!("{}:{}", url, port), builder)?
+    .bind(format!("{}:{}", url, port))?
+    // .bind_openssl(format!("{}:{}", url, port), builder)?
     .run()
     .await
 }
