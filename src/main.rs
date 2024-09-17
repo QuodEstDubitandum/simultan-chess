@@ -28,10 +28,10 @@ async fn main() -> std::io::Result<()> {
 
     let mut builder = SslAcceptor::mozilla_intermediate(SslMethod::tls()).unwrap();
     builder
-        .set_private_key_file("certs/key.pem", SslFiletype::PEM)
+        .set_private_key_file("certs/privkey.pem", SslFiletype::PEM)
         .unwrap();
     builder
-        .set_certificate_chain_file("certs/cert.pem")
+        .set_certificate_chain_file("certs/fullchain.pem")
         .unwrap();
 
     let server = web::Data::new(Server::new().await);
@@ -50,7 +50,6 @@ async fn main() -> std::io::Result<()> {
             )
             .service(web::scope("ws").service(connect_ws))
     })
-    .bind(format!("{}:{}", url, port))?
     .bind_openssl(format!("{}:{}", url, port), builder)?
     .run()
     .await
