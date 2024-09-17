@@ -45,6 +45,6 @@ jobs:
             echo "Removing existing Docker container..."
             docker rm simultan-chess || true
             echo "Running new Docker container..."
-            docker run -d --name simultan-chess -p 80:8000 simultan-chess
+            docker run -d --name simultan-chess -p 443:8000 simultan-chess
             echo "Deployment done!"
           EOF
